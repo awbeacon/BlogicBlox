@@ -45,6 +45,10 @@ public class BlockSectionScript
 			MC.enabled = false;
 		}
 	}
+	public void SetCollider (bool _enabled)//for use specifically with cursor to set/unset collider to detect mouseclicks through secondary camera/raycast
+	{
+		MC.enabled = _enabled;
+	}
 
 	public void ResetSection ()
 	{
@@ -115,7 +119,8 @@ public class BlockSectionScript
 		int TR = S.VertIndex[1];
 		int BR = S.VertIndex[2];
 		int BL = S.VertIndex[3];
-		Vector2 OffSet = Common.GetOffset(Type, Value); 
+		Vector2 OffSet = Common.GetOffset(Type, Value);
+		//Debug.Log(OffSet);
 		uv[TL] = new Vector2(((OffSet.x + 0) * RES_tile) / RES_full, ((OffSet.y + 1) * RES_tile) / RES_full);
 		uv[TR] = new Vector2(((OffSet.x + 1) * RES_tile) / RES_full, ((OffSet.y + 1) * RES_tile) / RES_full);
 		uv[BR] = new Vector2(((OffSet.x + 1) * RES_tile) / RES_full, ((OffSet.y + 0) * RES_tile) / RES_full);
@@ -149,7 +154,8 @@ public class BlockSectionScript
 					tris[m_TrisCount + 4] = B.Sides[i].VertIndex[3];
 					tris[m_TrisCount + 5] = B.Sides[i].VertIndex[1];
 
-					m_TrisCount += 6; 
+					m_TrisCount += 6;
+					//sdfasdjflajsdfl kjdflkaj flkajsdfl jadsflaksjdf laskjdflkasdjf k
 					SetSide(B.Sides[i], B.Type, B.Value); //sets UVs type 1 
 				}
 			}
@@ -162,7 +168,8 @@ public class BlockSectionScript
 		M.normals = normals;
 		M.uv = uv;
 		MC.sharedMesh = M;
-		MF.mesh = M; 
+		MF.mesh = M;
+		//	DisplayChanges();
 	}
 
 

@@ -6,6 +6,8 @@ using UnityEngine.UI;
 
 public class ViewDialogScript : MonoBehaviour
 {
+
+
 	string _text = "                    ";
 	string _targetText = "                    ";
 	string _textFull = "Visible Area        ";
@@ -67,13 +69,14 @@ public class ViewDialogScript : MonoBehaviour
 		rBig.x = Screen.width / 2;
 		rTarget = rSmall;
 		InvokeRepeating("ChangeHandDirection", 1, 2);
-		InvokeRepeating("UpdateText", 1, .1f);//Typing speed	 
+		InvokeRepeating("UpdateText", 1, .1f);//Typing speed
+	 
 	}
 
 	private void SetMinMax ()
 	{
-		m_Mins = GM._bloxManager._minBorder- new Vector3(1, 1, 1);
-		m_Maxs = GM._bloxManager._maxBorder; 
+		m_Mins = GM._bloxManager._minBorder - new Vector3(4, 4, 4);
+		m_Maxs = GM._bloxManager._maxBorder+ new Vector3(4, 4, 4); 
 	}
 
 	// Update is called once per frame
@@ -98,7 +101,10 @@ public class ViewDialogScript : MonoBehaviour
 	}
 
 	private void SetBars ()
-	{         
+	{
+
+		//CHECK FOR MOUSEUP TO AVOID REBUILDING LOTS OF TIMES
+
 		if (m_Transparency != GM._bloxManager.Transparency)
 		{
 			GM._bloxManager.Transparency = m_Transparency;
@@ -178,7 +184,7 @@ public class ViewDialogScript : MonoBehaviour
 		{
 			float xVisMaxTEMP = ((_Loc / _range) * xyzWidth.x) + xyzLeft.x;
 			xVisMax = Mathf.Floor(Mathf.Clamp(xVisMaxTEMP,xVisMin+1  , m_Maxs.x));
-			xVisMax = (xVisMax == m_Maxs.x) ?  500 : xVisMax ; 
+			xVisMax = (xVisMax == m_Maxs.x) ?  500 : xVisMax ;
 			GM._bloxManager._maxVisible.x = xVisMax;
 
 		}
@@ -202,18 +208,20 @@ public class ViewDialogScript : MonoBehaviour
 			float zVisMinTEMP = ((_Loc / _range) * xyzWidth.z) + xyzLeft.z;
 			zVisMin = Mathf.Floor(Mathf.Clamp(zVisMinTEMP, m_Mins.z, zVisMax - 1));
 			zVisMin = (zVisMin == m_Mins.z ) ? -500 : zVisMin;
-			Debug.Log(zVisMin);
-
 			GM._bloxManager._minVisible.z = zVisMin;
 		}
 		if (XYorZ == 5)
 		{
 			float zVisMaxTEMP = ((_Loc / _range) * xyzWidth.z) + xyzLeft.z;
 			zVisMax = Mathf.Floor(Mathf.Clamp(zVisMaxTEMP, zVisMin + 1, m_Maxs.z));
-			zVisMax = (zVisMax == m_Maxs.z ) ? 500 : zVisMax; 
-
+			zVisMax = (zVisMax == m_Maxs.z ) ? 500 : zVisMax;
 			GM._bloxManager._maxVisible.z = zVisMax;
-		}  
+		}
+
+
+		
+		
+
 	}
 	public void SetRebuild ()
 	{ 
@@ -221,13 +229,13 @@ public class ViewDialogScript : MonoBehaviour
 	}
 
 	private void SetTransparencyBar ()
-	{ 
+	{
+		//float TransLeft = 0;
 		float TransRight = rT.sizeDelta.x - 90;
 		float TransWidth = TransRight * (m_Transparency / 50);
 		Bars[3].sizeDelta = new Vector2(TransWidth, 8);
 		Pointers[6].anchoredPosition = new Vector2(TransWidth, 0);
 	}
-
 	public void SetTransparencyByMouse ()
 	{
 		float _mouse = Input.mousePosition.x;
@@ -236,6 +244,7 @@ public class ViewDialogScript : MonoBehaviour
 		float _range = W2 - W1;
 		float _Loc = Mathf.Clamp(_mouse - W1, 0, _range);
 		m_Transparency = (_Loc / _range) * 50;
+
 	}
 
 	void ChangeHandDirection ()
@@ -255,6 +264,8 @@ public class ViewDialogScript : MonoBehaviour
 		rSideThing.anchoredPosition = iTween.Vector2Update(rSideThing.anchoredPosition, rSidePosTarget, rTspeed);
 		rSideThing.sizeDelta = iTween.Vector2Update(rSideThing.sizeDelta, rSideTarget, rTspeed);
 		rT.anchoredPosition = iTween.Vector2Update(rT.anchoredPosition, CurrentLocation, rTspeed);
+
+
 	}
 
 	private void CheckState ()
@@ -277,7 +288,9 @@ public class ViewDialogScript : MonoBehaviour
 		rSideTarget = (rT.sizeDelta.y > 200) ? rSideBig : rSideSmall;
 		CurrentLocation = (m_Grow) ? OnScreen : OffScreen;
 	}
-    
+
+
+
 	public void SetText ()
 	{
 		float diff = Mathf.Abs(rTextArea.anchoredPosition.x - rTextPosBig.x) + Mathf.Abs(rTextArea.anchoredPosition.y - rTextPosBig.y);
@@ -292,7 +305,6 @@ public class ViewDialogScript : MonoBehaviour
 		}
 		TextArea.text = _text;
 	}
-
 	public void UpdateText ()
 	{
 		_targetText = _targetText.PadRight(20, ' ');
@@ -306,7 +318,6 @@ public class ViewDialogScript : MonoBehaviour
 			}
 		}
 	}
-
 	public void SetChangeWidth (float _cw)
 	{
 		ChangeWidth = _cw;
@@ -319,6 +330,7 @@ public class ViewDialogScript : MonoBehaviour
 			rBig.x = Mathf.Clamp(rBig.x + (250 * Time.deltaTime * ChangeWidth), 400, Screen.width - 20);
 
 		}
+
 	}
 
 

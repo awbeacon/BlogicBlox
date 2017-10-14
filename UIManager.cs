@@ -9,6 +9,8 @@ public class UIManager : MonoBehaviour
 
 	public Common.GameMode gameMode;
 	public Common.GameState gameState;
+	private Common.GameState previousState;
+
 	public bool AltClick = false;
 	public bool ShiftClick = false;
 	public bool CtrlClick = false;
@@ -53,20 +55,20 @@ public class UIManager : MonoBehaviour
 	public List<RectTransform> ConnectorsRight;
 
 	  int HackTextureIndex = 99;
-
 	// Use this for initialization
 	void Start ()
 	{
 		gameMode = Common.GameMode.Workshop;
 		 
-		SetGameState_Select( ); 
+		SetGameState_Place( ); 
 		Invoke("HideLogo", 15);
 		BitBins = new BitBinScript[BinCount];
 		Widths = new float[BinCount];
+		Transform BitBinParent = GameObject.Find("BitBins").transform;
 		for (int i = 0; i < BinCount; i++)
 		{
 			GameObject GO = Instantiate(BitBin);
-			GO.transform.SetParent(this.transform);
+			GO.transform.SetParent(BitBinParent);
 			BitBins[i] = GO.GetComponent<BitBinScript>();
 			BitBins[i].StartUp();
 			BitBins[i].GM = GM;
@@ -80,6 +82,8 @@ public class UIManager : MonoBehaviour
 			}		
 		}
 	}
+
+	
 
 	// Update is called once per frame
 	void Update ()
@@ -109,7 +113,9 @@ public class UIManager : MonoBehaviour
 		{	float Connection1 = ConnectorsLeft[i].anchoredPosition.x;
 			float Connection2 = ConnectorsRight[i].anchoredPosition.x;
 			Connectors[i].sizeDelta = new Vector2((Connection2-Connection1), 40);
+
 			Connectors[i].anchoredPosition = new Vector2(Connection1 + 20, 0);
+
 		}
 	}
 
@@ -120,10 +126,13 @@ public class UIManager : MonoBehaviour
 		iconMinLocation = tbTextAreaSize+30;
 		iconMaxLocation = Screen.width - 64;
 		float AvailableSpace = iconMaxLocation - iconMinLocation;
-		float diff =Mathf.Clamp( (iconMaxLocation - (iconMinLocation +   (Icons.Count * 44))) / (Icons.Count + 2),8,30);    
-	    iconCount = Icons.Count;		 
+		float diff =Mathf.Clamp( (iconMaxLocation - (iconMinLocation +   (Icons.Count * 44))) / (Icons.Count + 2),8,30);
+        
+		
+		  iconCount = Icons.Count;
+		 
 		float Spacing = 44+diff;
-		 MaxIcons =Mathf.Floor( AvailableSpace  / Spacing);
+		  MaxIcons =Mathf.Floor( AvailableSpace  / Spacing);
 		float Location = iconMinLocation - (iconOffset*Spacing);
 		foreach (RectTransform _icon in Icons)
 		{
@@ -134,7 +143,6 @@ public class UIManager : MonoBehaviour
 		}
 		SetIconTarget();
 	}
-
 	public void ChangeIconOffset (float Change)
 	{
 		iconOffsetTarget =  iconOffsetTarget + Change ;
@@ -147,7 +155,9 @@ public class UIManager : MonoBehaviour
 
 	public void ChangeToolbarTextAreaSize ( )
 	{
-		float _size =25+ Mathf.Clamp(Input.mousePosition.x, 100, 1500); 		 
+
+		float _size =25+ Mathf.Clamp(Input.mousePosition.x, 100, 1500); 
+		 
 		tbTextAreaSize = _size;
 	}
 
@@ -164,20 +174,19 @@ public class UIManager : MonoBehaviour
 			float W2 = Screen.width - 73;
 			float _range = W2 - W1;
 			float location = W1 + (_range * (TargetBinLocation / BinCount));
-			rSliderPointer.anchoredPosition = new Vector2(location, 14.5f);	 
+			rSliderPointer.anchoredPosition = new Vector2(location, 14.5f);
+	 
 	}
 
 	private void SetLogo ()
 	{
 		rLogo.sizeDelta = new Vector2(LogoSize, LogoSize / 2);
     }
-
 	public void IncrementBin (int I)
 	{
 		CurrentBin = Mathf.Clamp(CurrentBin+I, 0, BinCount  );
 		SetTarget();
 	}
-
 	public void SetBinByMouse ()
 	{
 		float _mouse = Input.mousePosition.x;
@@ -189,7 +198,6 @@ public class UIManager : MonoBehaviour
 		CurrentBin = (int)Mathf.Clamp(_newBin , 0, BinCount  );
 		SetTarget();
 	}
-
 	public void MovePointerByMouse ()
 	{
 		  float _mouse = Input.mousePosition.x;
@@ -199,7 +207,7 @@ public class UIManager : MonoBehaviour
 		float location = W1 + (_range * (TargetBinLocation / BinCount));
 		float _newBin = ((_mouse - W1) / (_range / BinCount));
 		TargetBinLocation =  Mathf.Clamp(_newBin, 0, BinCount);
-	    CurrentBin=Mathf.RoundToInt(TargetBinLocation);		 
+		  CurrentBin=Mathf.RoundToInt(TargetBinLocation);		 
     }
 	 
 	public void SetCurrentBin (int C)
@@ -237,7 +245,8 @@ public class UIManager : MonoBehaviour
 		{
 			float ThisWidth =  ( BitBins[i].rT.sizeDelta.x)  ;
             BitBins[i].SetPosition(new Vector2((Widths[i] + ThisWidth + BinSpacing) - MidPoint , 24));
-		}		
+		}
+		
 	}
 
 	private void SetTarget ( )
@@ -251,11 +260,11 @@ public class UIManager : MonoBehaviour
 		 "easetype", MoveType
 		 ));
 	}
-
 	void tweenOnUpdateCallBack (float newValue)
 	{
 		TargetBinLocation = newValue;		 
-	}	 
+	}
+	 
 	 
 	public void HideLogo ( )
 	{
@@ -272,22 +281,18 @@ public class UIManager : MonoBehaviour
 		   ));
 		}
 	}
-
 	void tweenOnUpdateCallBack2 (float newValue)
 	{
 		LogoSize = newValue;		 
 	}
-
 	public void ToggleCameraModeRotate (bool R)
 	{
 		cameraModeRotate = R;
 	}
-
 	public void ToggleCameraModeRotate ( )
 	{
 		cameraModeRotate = !cameraModeRotate;
 	}
-
 	public bool GetCameraModeRotate ()
 	{
 		if (AltClick)
@@ -301,35 +306,61 @@ public class UIManager : MonoBehaviour
 
 	public void SetGameState_Delete ()
 	{
-		gameState = Common.GameState.Delete;
+		Common.GameState SetState = Common.GameState.Delete;
+		previousState = (gameState == SetState) ? previousState : gameState;
+		gameState = SetState;
 	}
 	public void SetGameState_Info ()
 	{
-		gameState = Common.GameState.Info;
+		Common.GameState SetState = Common.GameState.Info;
+		previousState = (gameState == SetState) ? previousState : gameState;
+		gameState = SetState;
 	}
 	public void SetGameState_Open ()
 	{
-		gameState = Common.GameState.Open;
+		Common.GameState SetState = Common.GameState.Open;
+		previousState = (gameState == SetState) ? previousState : gameState;
+		gameState = SetState;
 	}
 	public void SetGameState_Place ()
 	{
-		gameState = Common.GameState.Place;
+		Common.GameState SetState = Common.GameState.Place;
+		previousState = (gameState == SetState) ? previousState : gameState;
+		gameState = SetState;
 	}
 	public void SetGameState_Play ()
 	{
-		gameState = Common.GameState.Play;
+		Common.GameState SetState = Common.GameState.Play;
+		previousState = (gameState == SetState) ? previousState : gameState;
+		gameState = SetState;
 	}
 	public void SetGameState_Save ()
 	{
-		gameState = Common.GameState.Save;
+		Common.GameState SetState = Common.GameState.View;
+		previousState = (gameState == SetState) ? previousState : gameState;
+		gameState = SetState;
 	}
 	public void SetGameState_Select ()
 	{
-		gameState = Common.GameState.Select;
+		Common.GameState SetState = Common.GameState.Select;
+		previousState = (gameState == SetState) ? previousState : gameState;
+		gameState = SetState;
 	}
 	public void SetGameState_View ()
+	{ 
+		Common.GameState SetState = Common.GameState.View;
+		previousState = (gameState == SetState) ? previousState : gameState;
+		gameState = SetState;
+	}
+	public void SetGameState_Drag ()
 	{
-		gameState = Common.GameState.View;
+		Common.GameState SetState = Common.GameState.Drag;
+        previousState = (gameState== SetState) ? previousState:gameState;
+		gameState = SetState;  
+	}
+	public void SetGameState_Previous ()
+	{ gameState = previousState;
+		 
 	}
 
 	public bool GetCmdCopy ()

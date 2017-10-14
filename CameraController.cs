@@ -110,13 +110,11 @@ public class CameraController : MonoBehaviour
 			RightClick = true;
 
 		}
-
 		if (Input.GetMouseButtonUp(1))
 		{
 
 			RightClick = false;
 		}
-
 		if (!OverUI)
 		{
 			if (!GM._UI.GetCameraModeRotate())
@@ -129,6 +127,8 @@ public class CameraController : MonoBehaviour
 				m_CameraTarget = Mathf.Clamp(m_CameraTarget * (1 - (zoomChange * ZoomSpeed)), 1, 450);
 			}
 		}
+
+
 	}
 
 	private void SetZoom ()
@@ -136,7 +136,6 @@ public class CameraController : MonoBehaviour
 		CameraZoom += (m_CameraTarget - CameraZoom) / ZoomDamper;
 		CameraPos.localPosition = new Vector3(0, 0, -CameraZoom);
 	}
-
 	public void OnTriggerStay (Collider Other)
 	{
 		if (Other.tag == "Blox" || Other.tag == "Cursor")

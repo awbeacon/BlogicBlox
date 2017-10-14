@@ -2,10 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class CursorScript : MonoBehaviour
 {
+
 	public Camera MainCamera;
+	public Camera CursorCamera;
 	public GameManagerScript GM;
 
 	//Group cursorGroup;
@@ -19,11 +22,16 @@ public class CursorScript : MonoBehaviour
 	public Transform CameraRotationTransform;
 	public Transform CameraTransform;
 
+	public RectTransform CursorDrag;
+	public Transform CursorBinTransform;
+	public Transform BitBinsTransform; //can move this on/off screen  0 >> -100
+
+
 	// Use this for initialization
 	void Start ()
 	{
-		 //Cursor.currentGroup = GameSaveScript.LoadTestGroup();
-		 Cursor.currentGroup = GameSaveScript.LoadGroup("BitBin02");
+		//Cursor.currentGroup = GameSaveScript.LoadTestGroup();
+		Cursor.currentGroup = GameSaveScript.LoadGroup("BitBin01");
 	}
 
 	// Update is called once per frame
@@ -38,21 +46,23 @@ public class CursorScript : MonoBehaviour
 	public void SetTransform ()
 	{
 		if (Cursor.currentGroup != null)
-		{ 
+		{
+			//Vector3 currentAngles = CameraRotationTransform.localEulerAngles;
 			Vector3 targetAngles = new Vector3(Cursor.currentGroup.udRotation, Cursor.currentGroup.lrRotation, 0);
 			CameraRotationTransform.localEulerAngles = targetAngles;
+
 			Cursor.currentGroup.SetMinMax();
 			Vector3 C = Cursor.currentGroup.center;
 			CameraRotationTransform.localPosition = C;
-			CameraTransform.localPosition = new Vector3(0,0,0-(Cursor.currentGroup.zoom));
+			CameraTransform.localPosition = new Vector3(0, 0, 0 - (Cursor.currentGroup.zoom));
 		}
 	}
 
 	private void NonMouseClickStuff ()
 	{
 		Common.GameState _state = GM._UI.gameState;
-		bool OverUI = GM._EventSystem.IsPointerOverGameObject(); 
-		//EXCAPE & EXIT -  
+		bool OverUI = GM._EventSystem.IsPointerOverGameObject();
+		//EXCAPE & EXIT - THIS SHOULD DEPEND SOMEWHAT ON THE CURRENT STATE, STARTING WITH CLEAR CURSOR SELECED
 		if (GM._UI.GetCmdEsc())
 		{
 			_bConstructor.currentGroup.ClearCursor();
@@ -86,13 +96,73 @@ public class CursorScript : MonoBehaviour
 			{
 				GM._UI.gameState = Common.GameState.Place;
 				_state = Common.GameState.Place;
-				_bConstructor.currentGroup.DeleteSelected( );
+				_bConstructor.currentGroup.DeleteSelected();
 			}
 			Cursor.currentGroup.ClearCursor();
 			Cursor.currentGroup.ClearSelected();
 			Cursor.currentGroup.ReCenter();
 			Cursor._Rebuild = true;
 		}
+		//*********** DRAG *************
+		if ((_state == Common.GameState.Drag))
+		{
+			float Start = CursorBinTransform.position.y;
+			float End = BitBinsTransform.position.y;
+			float Current = Input.mousePosition.y;
+
+			float Size = Mathf.Clamp((((Current - 20) / Start) * 200), 80, 512);
+
+			Vector2 TargetSize = new Vector2(Size, Size);
+			CursorDrag.sizeDelta = TargetSize;
+			Vector3 SizeDelta = CursorDrag.sizeDelta;
+
+			SizeDelta.x /= 2;
+			SizeDelta.y /= 2; 
+			if (Input.GetMouseButton(0))
+			{
+				CursorDrag.position = Input.mousePosition - SizeDelta;				 
+			}
+			else
+			{
+				 
+					Group g = new Group(Cursor.currentGroup); 
+					 
+
+					PointerEventData pointerData = new PointerEventData(EventSystem.current)
+					{
+						position = Input.mousePosition
+					};
+
+					List<RaycastResult> results = new List<RaycastResult>();
+					EventSystem.current.RaycastAll(pointerData, results);
+
+					results.ForEach((result) => {
+						if (result.gameObject.name=="EventTriggerCenter")
+						{
+							BitBinScript bbs = result.gameObject.GetComponentInParent<BitBinScript>();
+							if (bbs)
+							{
+								bbs.DragDrop(new Group(Cursor.currentGroup));
+							}
+						}
+					});
+				
+
+
+
+
+				//if (!OverUI)
+				{
+					GM._UI.SetGameState_Previous();
+				}
+				CursorDrag.position = new Vector2(-1000, -1000);
+			}
+		}
+		else
+		{
+			CursorDrag.position = new Vector2(-1000, -1000);
+		}
+
 
 	}
 
@@ -100,7 +170,7 @@ public class CursorScript : MonoBehaviour
 	{
 		if (CursorTimer < 0)
 		{
-			CursorPosition.position = OffScreen;
+			CursorOffscreen();
 		}
 		else
 		{
@@ -114,86 +184,48 @@ public class CursorScript : MonoBehaviour
 		Ray ray = MainCamera.ScreenPointToRay(Input.mousePosition);
 		if (Physics.Raycast(ray, out hit))
 		{
-
-			//  Debug.Log(hit.transform.tag);
 			if (hit.transform.tag == "Blox")
 			{
-				bool OverUI = GM._EventSystem.IsPointerOverGameObject(); 
-				CursorTimer = OverUI?-1:.5f;
+				bool OverUI = GM._EventSystem.IsPointerOverGameObject();
+				CursorTimer = OverUI ? -1 : .5f;
 				//GET ORIGIN & DESINATION
-				Vector3 HV = hit.point;
-				//Point HP = new Point(hit.point);
+				Vector3 rawHitPoint = hit.point;
+				Vector3 rawCameraPoint = MainCamera.transform.position;
 
-				Vector3 hpFloor = new Vector3(Mathf.Floor(HV.x + .001f), Mathf.Floor(HV.y + .001f), Mathf.Floor(HV.z + .001f));//.001 cuz raycast sometimes registers at .999999999 instead of 1
-				Vector3 cPos = MainCamera.transform.position;
-				Vector3 Diff = HV - hpFloor;
-
-				bool X_middle = (Diff.x > .01f && Diff.x < .99f);
-				bool Y_middle = (Diff.y > .01f && Diff.y < .99f);
-				bool Z_middle = (Diff.z > .01f && Diff.z < .99f);
-				bool X_side = Y_middle && Z_middle;
-				bool Y_side = !X_side && X_middle && Z_middle;
-				bool Z_side = !Y_side && X_middle && Y_middle;
-				bool isSide = (X_side || Y_side || Z_side);
-
-				//DESTINATION ****************
-				Vector3 OffSet = new Vector3(0, 0, 0);
-				if (X_side && cPos.x < hpFloor.x)
-				{
-					OffSet.x = -1;
-				}
-				else if (Y_side && cPos.y < hpFloor.y)
-				{
-					OffSet.y = -1;
-				}
-				else if (Z_side && cPos.z < hpFloor.z)
-				{
-					OffSet.z = -1;
-				}
-				Point Destination = new Point(hpFloor + OffSet);
-
-				//ORIGIN ************************
-				OffSet = new Vector3(0, 0, 0);
-				if (X_side && cPos.x > hpFloor.x)
-				{
-					OffSet.x = -1;
-				}
-				else if (Y_side && cPos.y > hpFloor.y)
-				{
-					OffSet.y = -1;
-				}
-				else if (Z_side && cPos.z > hpFloor.z)
-				{
-					OffSet.z = -1;
-				}
-				Point Origin = new Point(hpFloor + OffSet);
+				Point Destination = Common.GetDesination(rawHitPoint, rawCameraPoint);
+				Point Origin = Common.GetOrigin(rawHitPoint, rawCameraPoint);
 
 				//DO STUFF BASED ON GAME STATE USING DESINATION & ORIGIN ******************
 				Common.GameState _state = GM._UI.gameState;
 				//	_bConstructor = hit.transform.gameObject.GetComponent<BlockConstructor>();
 
 				//PLACE AND MOUSE DOWN
-				if (Input.GetMouseButtonDown(0) && GM._UI.gameState == Common.GameState.Place&&!OverUI)
-				{ 
-					_bConstructor.currentGroup.addGroup(Destination, Cursor.currentGroup); 
+				if (Input.GetMouseButtonDown(0) && GM._UI.gameState == Common.GameState.Place && !OverUI)
+				{
+					_bConstructor.currentGroup.addGroup(Destination, Cursor.currentGroup);
 				}
 
 				if (_state == Common.GameState.Place && !OverUI)
 				{
-						CursorPosition.position = Destination.ToVector();  
-				} 
+					CursorOnscreen(Destination);
+				}
+				//	Cursor.currentGroup = GameSaveScript.LoadTestGroup();
 
 				//NOT SELECT AND NOT DELETE *************
 				if ((_state != Common.GameState.Select && _state != Common.GameState.Delete))
 				{
 					_bConstructor.currentGroup.ClearCursor();
-					_bConstructor.currentGroup.ClearSelected(); 
-				}		
-			 
+					_bConstructor.currentGroup.ClearSelected();
+					//_bConstructor._Rebuild = true;
+				}
+
+
+
+
 				//***** DELETE ******
-				if ((_state == Common.GameState.Delete) && !OverUI) 
+				if ((_state == Common.GameState.Delete) && !OverUI)
 				{
-					CursorPosition.position = OffScreen;
+					CursorOffscreen();
 
 					_bConstructor.currentGroup.ClearCursor();
 					_bConstructor.currentGroup.SetCursor(Origin, true);
@@ -205,13 +237,13 @@ public class CursorScript : MonoBehaviour
 						_bConstructor.currentGroup.DeleteNotConnectedToCenter();
 
 					}
-					_bConstructor.currentGroup.DeleteSelected( );
+					_bConstructor.currentGroup.DeleteSelected();
 				}
 
 				//SELECT  ***********************
 				if ((_state == Common.GameState.Select) && !OverUI)
 				{
-					CursorPosition.position = OffScreen;
+					CursorOffscreen();
 
 					if (Input.GetMouseButtonDown(0))
 					{
@@ -227,13 +259,58 @@ public class CursorScript : MonoBehaviour
 						_bConstructor.currentGroup.ClearCursor();
 						_bConstructor.currentGroup.SetCursor(Origin, true);
 
-					} 
+					}
 				}
-			}
+				//SELECT  ***********************
 
+			}
 		}
 	}
 
+	private void CursorOnscreen (Point Destination)
+	{
+		Cursor.SetAllColliders(false);
+		CursorPosition.position = Destination.ToVector();
+	}
 
-	 
+	private void CursorOffscreen ()//Gets called whenever cursor is offscreen
+	{
+		CursorPosition.position = OffScreen;
+		Cursor.SetAllColliders(true);
+		ForceCursorInView(100);
+	}
+
+	public void ForceCursorInView (int c)
+	{
+		for (int i = 0; i < c; i++)
+		{
+			//create 2 random edge rays and move camera if they hit something
+			float Check1 = ((float)UnityEngine.Random.Range(0, 101)) / 100;
+			float Check2 = UnityEngine.Random.Range(0, 2)==0?.04f:.96f;
+			Vector2 PositionToCheck1 = new Vector2(Check1, Check2);
+			Vector2 PositionToCheck2 = new Vector2(Check2, Check1);
+			Ray ray1 = CursorCamera.ViewportPointToRay(PositionToCheck1);
+			Ray ray2 = CursorCamera.ViewportPointToRay(PositionToCheck2);
+			
+			RaycastHit hit1;
+			if (Physics.Raycast(ray1, out hit1))
+			{
+				if (hit1.distance < 100)
+				{
+					Cursor.currentGroup.SetZoom(Cursor.currentGroup.zoom * (1 + Time.deltaTime));
+					i = c;
+				}
+			}
+			RaycastHit hit2;
+			if (Physics.Raycast(ray2, out hit2))
+			{
+				if (hit2.distance<100)
+				{
+					Cursor.currentGroup.SetZoom(Cursor.currentGroup.zoom * (1+Time.deltaTime));
+					i = c;
+				}
+				
+			}
+		}
+	}
 }

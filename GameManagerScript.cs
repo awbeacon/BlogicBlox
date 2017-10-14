@@ -71,6 +71,7 @@ public class GameManagerScript : MonoBehaviour
 		CPSCounter++;
 		if (CPSTimeCounter <= Time.time - 1)//****** THIS HAPPENS ONCE PER SECOND IN CASE SOMETHING NEEDS TO BE SCHEDULED TO HAPPEN (OR TESTED)
 		{
+
 			CPS = CPSCounter;
 			CPSCounter = 0;
 			CPSTimeCounter = Time.time;

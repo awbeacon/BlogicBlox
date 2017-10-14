@@ -4,16 +4,30 @@ using UnityEngine;
 
 public class BasicConstructor : MonoBehaviour { 
 	public Material mat;
+
 	public List<BlockSectionScript> BlockSections = new List<BlockSectionScript>();
-	public List<bit> DisplayBits = new List<bit>();
+
+	public List<bit> DisplayBits = new List<bit>();//ARRAY BROKEN DOWN BY SECTION CAN BE SUBDIVIDED
+
 	public int CurrentBlockSections = 0;
+
 	public bool _Rebuild;
 	public Group currentGroup;
 	void Start ()
 	{
 		// currentGroup = GameSaveScript.LoadTestGroup();
+
 	}
-	
+
+	public void SetAllColliders (bool _enabled)
+	{
+		foreach (BlockSectionScript blockSection in BlockSections)
+		{
+			blockSection.SetCollider(_enabled);
+		}
+	}
+
+
 	void CreateBlockSections (int Section)
 	{
 		for (int i = BlockSections.Count; i < Section; i++)
@@ -26,7 +40,7 @@ public class BasicConstructor : MonoBehaviour {
 	{
 		ReBuildBlox();
 	}
-
+	
 	private BlockSectionScript BuildBlockSection (int Section_Index)
 	{
 		Material _mat = mat;
@@ -36,11 +50,16 @@ public class BasicConstructor : MonoBehaviour {
 		bSEction.BlockSectionStart(Section_Index, BC, _mat, false);
 		bSEction.GO.transform.SetParent(this.transform);
 		bSEction.GO.transform.position = this.transform.position;
+
 		bSEction.GO.layer = this.gameObject.layer;
+
+
 		return bSEction;
 	}
 
-    
+	// Update is called once per frame
+
+
 	private List<bit> rawBits2Bits (List<RawBit> rbs)//also add part # ?
 	{
 		List<bit> newBits = new List<bit>();
@@ -52,7 +71,8 @@ public class BasicConstructor : MonoBehaviour {
 		return newBits;
 	}
 
-	private void ReBuildBlox () 
+	private void ReBuildBlox () //Change to use only CURRENTGROUP - USE FUNCTIONS IN GROUPS/PARTS TO SORT
+								//CREATE BLOCKS OF 1000 BITS BY PART AND NAME THEM PART_1.1 PART 1.2 ETC
 	{
 		int PartCount = currentGroup.GetPartCount(); 
 		currentGroup.SetCheckSums();
@@ -61,8 +81,9 @@ public class BasicConstructor : MonoBehaviour {
 		for (int part = 0; part < PartCount; part++)
 		{
 			int checkSum = currentGroup.checkSums[part];
-			if (BlockSections[part].checkSum != checkSum||_Rebuild)
+			if (BlockSections[part].checkSum != checkSum||_Rebuild)//SET TO COMPARE CHECKSUM
 			{
+				//Debug.Log(checkSum + " rebuilding part " + part + " cursor object");
 				BlockSections[part].checkSum = checkSum;
 				DisplayBits.Clear();
 				var _bits = rawBits2Bits(currentGroup.GetRawBits());
@@ -86,6 +107,7 @@ public class BasicConstructor : MonoBehaviour {
 		}
 		DisplayBits.Clear();
 	}
+
 
 	public void Dispose ()
 	{

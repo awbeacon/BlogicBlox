@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class BitBinScript : MonoBehaviour
@@ -90,6 +91,7 @@ public class BitBinScript : MonoBehaviour
 		ApplyPosition();
 		SetText();
 		BinZoom();
+		  
 	}
 
 	private void ApplyPosition ()
@@ -235,6 +237,7 @@ public class BitBinScript : MonoBehaviour
 	{
 		GM._CursorConstructor.currentGroup = BinGroup;
 	}
+
 	public void ClearStaging ()
 	{
 		MouseOver = false;
@@ -265,6 +268,16 @@ public class BitBinScript : MonoBehaviour
 			float zoomChange = Input.GetAxis("Mouse ScrollWheel");
 			BinGroup.zoom = Mathf.Clamp(BinGroup.zoom * (1 + -zoomChange), 1.4f, 100);
 		}
-
+	}
+	public void DragDrop (Group g)
+	{		
+		 
+				Debug.Log("there " + BinIndex);
+				SetGroup(g);
+				ClearStaging();
+				SetStaging(); 
+				
+			 
+			 
 	}
 }

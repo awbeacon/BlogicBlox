@@ -13,18 +13,21 @@ public class BlockConstructor : MonoBehaviour, IDisposable
 	public List<BlockSectionScript> BlockSectionsVisible = new List<BlockSectionScript>();
 	public List<BlockSectionScript> BlockSectionsTransparent = new List<BlockSectionScript>();
 
-	public List<bit> DisplayBitsVisible = new List<bit>(); 
-	public List<bit> DisplayBitsTransparent = new List<bit>(); 
+	public List<bit> DisplayBitsVisible = new List<bit>();//ARRAY BROKEN DOWN BY SECTION CAN BE SUBDIVIDED
+	public List<bit> DisplayBitsTransparent = new List<bit>();//ARRAY BROKEN DOWN BY PART EACH PART CAN BE SUBDIVIDED
 
 	public int CurrentBlockSectionVisible = 0;
 	public int CurrentBlockSectionTransparent = 0;
-    public bool _Rebuild;
+
+
+	 public bool _Rebuild;
 
 
 	// Use this for initialization
 	void Start ()
 	{
-		ResetGroup();		 
+		ResetGroup();
+		 
 	}
 
 	void CreateBlockSections (int Section) //might need to dynamically delete these as well
@@ -37,7 +40,8 @@ public class BlockConstructor : MonoBehaviour, IDisposable
 				BlockSectionsVisible.Add(BuildBlockSection(i, true));
 				BlockSectionsTransparent.Add(BuildBlockSection(i, false));
 			}
-		} 
+		}
+		 
       
 	}
 
@@ -45,19 +49,22 @@ public class BlockConstructor : MonoBehaviour, IDisposable
 	{
 		currentGroup.SetCheckSums();
 		 
-			ReBuildBlox()
-    }
+			ReBuildBlox();		 
+ 
+	}
 
 	
 	public void ResetGroup ()
 	{
 		RawBit rb = new RawBit(new Point(0, 0, 0), 4, 0); //DEFAULT INSULATOR;		 
-		currentGroup = new Group(rb);		 
+		currentGroup = new Group(rb);
+		 
 	}
 
 	public void ResetGroup (Group G)
 	{
-		currentGroup = G;		 
+		currentGroup = G;
+		 
 	}
 
 	//CHANGE TO CHECK NEIGHBORS ON SUB LISTS OF PARTS (VISIBLE / NOT-VISIBLE)
@@ -72,12 +79,10 @@ public class BlockConstructor : MonoBehaviour, IDisposable
 			CheckNeighborTransparent(b);
 		}
 	}
-
 	private bit GetBitVisible (int _x, int _y, int _z)
 	{
 		return DisplayBitsVisible.Find(b => (b.X == _x && b.Y == _y && b.Z == _z));
 	}
-
 	private void CheckNeighborVisible (bit b)
 	{
 		bit[] testbit = new bit[6];
@@ -225,8 +230,9 @@ public class BlockConstructor : MonoBehaviour, IDisposable
 				}
 				 	BuildSections(part); 
 			}
-		} 
 
+		}
+		//this should build the section with a blank slate
 		for (int clearSection = PartCount; clearSection < BlockSectionsVisible.Count; clearSection++)
 		{
 			DisplayBitsVisible.Clear();
@@ -256,15 +262,14 @@ public class BlockConstructor : MonoBehaviour, IDisposable
 		DisplayBitsTransparent.Clear();
 	}
 
-	public bool IsVisible (int _x, int _y, int _z)//visible inside boundries  
+	public bool IsVisible (int _x, int _y, int _z)//visible inside boundries or if bounds are >+-500
 	{
 		bool xTrue = (_x >= GM._bloxManager._minVisible.x) && (_x < GM._bloxManager._maxVisible.x);
 		bool zTrue = (_z >= GM._bloxManager._minVisible.z) && (_z < GM._bloxManager._maxVisible.z);
 		bool yTrue = (_y >= GM._bloxManager._minVisible.y) && (_y < GM._bloxManager._maxVisible.y);
 		return (xTrue && yTrue && zTrue);
 	}
-
-	public bool IsVisible (float _x, float _y, float _z)//visible inside boundries  
+	public bool IsVisible (float _x, float _y, float _z)//visible inside boundries or if bounds are >+-500
 	{
 		return IsVisible((int)_x, (int)_y, (int)_z);
 	}

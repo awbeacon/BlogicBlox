@@ -7,6 +7,11 @@ public	Transform[] Masks;
 	public Vector2 _LR = new Vector2(0, 0);
 	public Vector2 _DU = new Vector2(0, 0);
 	public Vector3 Depth  =new Vector3(0,0,0);
+
+	// Use this for initialization
+	void Start () {
+		
+	}
 	
 	// Update is called once per frame
 	void Update ()

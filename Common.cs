@@ -9,15 +9,15 @@ public static class Common
 	{
 		PlayModeChangeName, Workshop
 	} 
-
 	public enum GameState
 	{
-		Select, Place, Delete, Open, Save, Info, Play, View
+		Select, Place, Delete, Open, Save, Info, Play, View,
+		Drag
 	}
-
-	public enum CursorBinState
+	 
+	public enum CursorBinDetailsState
 	{
-		OffScreen,OnScreen
+		 Detail, Save, Open, New , Download, Upload
 	}
 
 	public static int DirectionZ = 0;
@@ -38,6 +38,65 @@ public static class Common
 
 		return Return;
 	}
+
+	public static Point GetOrigin (Vector3 rawHitPoint, Vector3 rawCameraPoint )
+	{
+		Vector3 hpFloor = new Vector3(Mathf.Floor(rawHitPoint.x + .001f), Mathf.Floor(rawHitPoint.y + .001f), Mathf.Floor(rawHitPoint.z + .001f));//.001 cuz raycast sometimes registers at .999999999 instead of 1
+		Vector3 Diff = rawHitPoint - hpFloor;
+
+		bool X_middle = (Diff.x > .01f && Diff.x < .99f);
+		bool Y_middle = (Diff.y > .01f && Diff.y < .99f);
+		bool Z_middle = (Diff.z > .01f && Diff.z < .99f);
+		bool X_side = Y_middle && Z_middle;
+		bool Y_side = !X_side && X_middle && Z_middle;
+		bool Z_side = !Y_side && X_middle && Y_middle;
+		bool isSide = (X_side || Y_side || Z_side); 
+		Vector3 OffSet = new Vector3(0, 0, 0);
+		if (X_side && rawCameraPoint.x > hpFloor.x)
+		{
+			OffSet.x = -1;
+		}
+		else if (Y_side && rawCameraPoint.y > hpFloor.y)
+		{
+			OffSet.y = -1;
+		}
+		else if (Z_side && rawCameraPoint.z > hpFloor.z)
+		{
+			OffSet.z = -1;
+		}
+		return new Point(hpFloor + OffSet);
+	}
+	public static Point GetDesination (Vector3 rawHitPoint, Vector3 rawCameraPoint)
+	{
+		Vector3 hpFloor = new Vector3(Mathf.Floor(rawHitPoint.x + .001f), Mathf.Floor(rawHitPoint.y + .001f), Mathf.Floor(rawHitPoint.z + .001f));//.001 cuz raycast sometimes registers at .999999999 instead of 1
+		Vector3 Diff = rawHitPoint - hpFloor;
+
+		bool X_middle = (Diff.x > .01f && Diff.x < .99f);
+		bool Y_middle = (Diff.y > .01f && Diff.y < .99f);
+		bool Z_middle = (Diff.z > .01f && Diff.z < .99f);
+		bool X_side = Y_middle && Z_middle;
+		bool Y_side = !X_side && X_middle && Z_middle;
+		bool Z_side = !Y_side && X_middle && Y_middle;
+		bool isSide = (X_side || Y_side || Z_side);
+		 
+		Vector3 OffSet = new Vector3(0, 0, 0);
+		if (X_side && rawCameraPoint.x < hpFloor.x)
+		{
+			OffSet.x = -1;
+		}
+		else if (Y_side && rawCameraPoint.y < hpFloor.y)
+		{
+			OffSet.y = -1;
+		}
+		else if (Z_side && rawCameraPoint.z < hpFloor.z)
+		{
+			OffSet.z = -1;
+		}
+		return new Point(hpFloor + OffSet);
+	}
+
+
+
 }
 
 public static class BitTypes
@@ -75,14 +134,14 @@ public class Group
 
 	public float udRotation = 0;
 	public float lrRotation = 0;
-	public float zoom = 2;  
+	public float zoom = 2;
+	 
 
 	public String GetFileName ()
 	{
 		string _fileName = Name.Replace(' ', '_');
 		return _fileName;
 	}
-
     public Group ()
 	{
 		initializeGroup();
@@ -112,6 +171,20 @@ public class Group
 		lrRotation = gS.lrRotation;
 		zoom = gS.zoom;
 		foreach (RawBitSave rbs in gS.rawBitSaves)
+		{
+			AddBit(new RawBit(rbs.point, rbs.type, rbs.value));
+		}
+	}
+
+	public Group (Group g)
+	{
+		initializeGroup();
+		Name = g.Name;
+		Description = g.Description;
+		udRotation = g.udRotation;
+		lrRotation = g.lrRotation;
+		zoom = g.zoom;
+		foreach (RawBit rbs in g.rawBits)
 		{
 			AddBit(new RawBit(rbs.point, rbs.type, rbs.value));
 		}
@@ -195,6 +268,8 @@ public class Group
 		AddBits(group.GetRawBits(destination));
 	}
 
+
+
 	public RawBit GetRawbitAtPoint (Point point)
 	{
 		foreach (RawBit rb in rawBits)
@@ -239,12 +314,10 @@ public class Group
 			checkSums.Add(GetCheckSum(i));
 		}
 	}
-
 	public int GetBitZeroValue ()
 	{
 		return rawBits[0].value;
 	}
-
 	public void SetBitZeroValue (int ADD)
 	{
 		rawBits[0].value = Mathf.Clamp((rawBits[0].value+ ADD),0,255);
@@ -301,7 +374,6 @@ public class Group
 		}
 		return returnRawBits;
 	}
-
 	public List<RawBit> GetRawBits (bool cursor, bool selected)
 	{
 		List<RawBit> returnRawBits = new List<RawBit>();
@@ -315,7 +387,8 @@ public class Group
 		}
 		return returnRawBits;
 	}
-    
+
+
 	public List<RawBit> GetRawBits (Point offset)//offsets for placement location
 	{
 		List<RawBit> rbs = new List<RawBit>();
@@ -328,14 +401,16 @@ public class Group
 		}
 		return rbs;
 	}
-    
+
+
 	internal void DeleteNotConnectedToCenter ()
 	{
 
 		rawBits.RemoveAll(rb => rb.ConnectedToCenter == false);
 	}
 
-    internal void DeleteSelected ()
+
+	internal void DeleteSelected ()
 	{
 
 		int bitsDeleted = rawBits.RemoveAll(rb => rb.Selected == true && !(rb.point.Equals(new Point(0, 0, 0))));
@@ -346,15 +421,48 @@ public class Group
 
 	}
 
-	public void rotateGroup ()
+	public void rotateGroup (int _X, int _Y, int _Z)
 	{
-		//rotate all parts around center point **********************************************************************************************
+		foreach (RawBit rb in rawBits)
+		{
+			Point p = rb.point;
+			if (_Z == 1)
+			{
+				rb.point.x = -p.y;
+				rb.point.y = p.x;
+			}
+			if (_Z == -1)
+			{
+				rb.point.x = p.y;
+				rb.point.y = -p.x;
+			}
+			if (_X == 1)
+			{
+				rb.point.z = -p.y;
+				rb.point.y = p.z;
+			}
+			if (_X == -1)
+			{
+				rb.point.z= p.y;
+				rb.point.y = -p.z;
+			}
+			if (_Y == 1)
+			{
+				rb.point.z = -p.x;
+				rb.point.x = p.z;
+			}
+			if (_Y == -1)
+			{
+				rb.point.z = p.x;
+				rb.point.x = -p.z;
+			}
+		}
 	}
 
 	public void OptimizeGroup (bool Full)//needs full optimization
 	{
 	}
-	public void ReCenter ()
+	public void ReCenter ()//sets bit zero as 0,0,0
 	{
 		if (rawBits.Count > 0)
 		{
@@ -365,8 +473,31 @@ public class Group
 		}
 	}
 
+	public void ChangeCenter (Point point)
+	{
+
+		if (rawBits.Count > 0)
+		{
+			RawBit currentCenter = rawBits[0];
+			int _swapInedx = 0;
+			for (int i = 0; i < rawBits.Count; i++)
+			{
+				if (rawBits[i].point.Equals(point))
+				{
+					_swapInedx = i;
+				}
+			}
+			rawBits[0] = rawBits[_swapInedx];
+			rawBits[_swapInedx] = currentCenter;
+
+		}
+		ReCenter();
+	}
+
+
 	internal void Clear ()
 	{
+		//hasChanges = true;
 		rawBits.Clear();
 	}
 
@@ -395,6 +526,18 @@ public class Group
 		}
 	}
 
+	/*private int GetRawbitIndexAtPoint (Point point)
+	{
+		for (int i = 0; i < rawBits.Count; i++)
+		{
+			if (rawBits[i].point.Equals(point))
+			{
+				return (rawBits[i].ConnectedToCenter) ? -1 : i;
+			}
+		}
+		return -1;
+	}*/
+
 	public bool BitExists (Point point)
 	{
 		foreach (RawBit rb in rawBits)
@@ -409,6 +552,7 @@ public class Group
 
 	public void SetSelected (Point point, bool selected)
 	{
+		//	hasChanges = true;
 		foreach (RawBit rb in rawBits)
 		{
 			if (rb.point.Equals(point))
@@ -420,6 +564,7 @@ public class Group
 
 	public void SetCursor (Point point, bool cursor)
 	{
+		//hasChanges = true;
 		foreach (RawBit rb in rawBits)
 		{
 			if (rb.point.Equals(point) && !rb.Selected)
@@ -431,6 +576,7 @@ public class Group
 
 	public void ClearCursor ()
 	{
+		//hasChanges = true;
 		foreach (RawBit rb in rawBits)
 		{
 			rb.Cursor = false;
@@ -439,15 +585,16 @@ public class Group
 
 	public void ClearSelected ()
 	{
+		//hasChanges = true;
 		foreach (RawBit rb in rawBits)
 		{
 			rb.Selected = false;
 		}
 	}
-
 	public void ChangeCursorToSelected ()
 	{
-        foreach (RawBit rb in rawBits)
+		//hasChanges = true;
+		foreach (RawBit rb in rawBits)
 		{
 			if (rb.Cursor == true)
 			{
@@ -462,12 +609,17 @@ public class Group
 		float lrNormalized = Mathf.Clamp01(LR);
 		lrRotation = 380 * lrNormalized; 
 	}
-
 	public void SetUD (float UD)//noramalize number 0 to 1 mapped to -100-100 )wiggle room)
 	{
 		float udNormalized = (2 * Mathf.Clamp01(UD)) - 1;
-		udRotation = 75 * udNormalized;		 
-	}	
+		udRotation = 75 * udNormalized;
+		 
+	}
+	public void SetZoom (float Z)
+	{
+		 zoom = Mathf.Clamp(Z, 1.4f, 100);
+	}
+	
 } 
 
 public class RawBit
@@ -488,7 +640,8 @@ public class RawBit
 		Selected = false;
 		Cursor = false;
 		Neighbors = new RawBit[6];
-	}	
+	}
+	
 }
 
 
@@ -503,10 +656,12 @@ public class bit
 	public int X;
 	public int Y;
 	public int Z;
+	//public bool[] SidesActive;//
 
 	public Side[] Sides;
 	public int VertCount;
 	public int TrisCount;
+	//public int BlockSection;
 
 	public bit (int _x, int _y, int _z, int _type, int _value)
 	{
@@ -611,21 +766,20 @@ public struct Point
 		y = _y;
 		z = _z;
 	}
-
 	public Point (Vector3 v3)
 	{
 		x = (int)v3.x;
 		y = (int)v3.y;
 		z = (int)v3.z;
-	}
 
+	}
 	public Point (Point p1, Point p2)//add 2 points
 	{
 		x = p1.x + p2.x;
 		y = p1.y + p2.y;
 		z = p1.z + p2.z;
-	}
 
+	}
 	public bool Equals (Point other)
 	{
 
@@ -647,3 +801,4 @@ public struct IntVector2
 {
 	public int x; public int y;
 }
+ 

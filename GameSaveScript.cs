@@ -6,9 +6,9 @@ using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
 public static class GameSaveScript   {
-
 	//maybe save group & metadata separately so the metadata can be loaded with 
 	//picture, details, name, and file location for displaying
+
 
 	public static Group LoadTestGroup ()
 	{
@@ -26,21 +26,21 @@ public static class GameSaveScript   {
 		G.addGroup(new Point(0, 1, 0), newgroup);
 		return G;
 	}
-
 	public static bool SaveGroup (Group G)
 	{
 		return SaveGroup(G, G.GetFileName());
 	}
-
 	public static void SaveTexture (String fileName, RenderTexture rt)
 	{
 		Texture2D texture2D = new Texture2D(rt.width,rt.height, TextureFormat.RGB24, false);
 		RenderTexture.active = rt;
 		texture2D.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
-		string filePath = Application.streamingAssetsPath + "\\" + fileName + ".png";
-		System.IO.File.WriteAllBytes(filePath, texture2D.EncodeToPNG());		
-    } 
 
+		string filePath = Application.streamingAssetsPath + "\\" + fileName + ".png";
+		//Debug.Log("saVING: " + filePath); 
+		System.IO.File.WriteAllBytes(filePath, texture2D.EncodeToPNG());
+		//RenderTexture.active = null;
+    } 
 	public static bool SaveGroup (Group G, String fileName)
 	{
 		GroupSave GS = new GroupSave(G);
@@ -60,7 +60,7 @@ public static class GameSaveScript   {
 			return false;
 		}
 		return true;
-    }
+	}
 
 
 	public static Group  LoadGroup (String FileName) // MOVE TO RESOURCE FOLDER IN PRODUCITON ********************
@@ -89,7 +89,8 @@ public static class GameSaveScript   {
 		{ Debug.Log("nope");
 			return null;
 
-		}		 
+		}
+		 
 		return new Group(GS);
 	}
 
@@ -100,8 +101,10 @@ public static class GameSaveScript   {
 			byte[] fileData;
 		//Debug.Log(filePath);
 		if (File.Exists(filePath))
-			{			 
-				fileData = File.ReadAllBytes(filePath);				 
+			{
+			 
+				fileData = File.ReadAllBytes(filePath);
+				 
 				T.LoadImage(fileData); //..this will auto-resize the texture dimensions.
 			}  
 		return T;
@@ -117,7 +120,9 @@ public class GroupSave
 	public String Description;
 	internal float udRotation;
 	internal float lrRotation;
-	internal float zoom;	 
+	internal float zoom;
+
+	 
 	public GroupSave (Group G)
 	{
 		Name = G.Name;
@@ -145,6 +150,7 @@ public class RawBitSave
 		type = rb.type;
 		value = rb.value;  
 	}
+
 }
 
 

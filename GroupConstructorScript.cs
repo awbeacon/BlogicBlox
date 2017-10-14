@@ -7,9 +7,15 @@ public class GroupConstructorScript : MonoBehaviour
 
 	public BlockConstructor blockConstructor;
 	public Material mat;
+
 	public List<BlockSectionScript> BlockSections = new List<BlockSectionScript>();
-	public List<bit> DisplayBits = new List<bit>();
+
+	public List<bit> DisplayBits = new List<bit>();//ARRAY BROKEN DOWN BY SECTION CAN BE SUBDIVIDED
+
 	public int CurrentBlockSections = 0;
+
+	//public bool _Rebuild;
+
 	public bool cursor;
 	public bool selected;
 
@@ -33,18 +39,23 @@ public class GroupConstructorScript : MonoBehaviour
 		Material _mat = mat;
 		BlockSectionScript bSEction = new BlockSectionScript();
 		BlockConstructor BC = this.gameObject.GetComponent<BlockConstructor>();
+
 		bSEction.BlockSectionStart(Section_Index, BC, _mat, cursor);//if not cursor select then it has no collider
 		bSEction.GO.transform.SetParent(this.transform);
+
 		return bSEction;
 	}
-    
+
+	// Update is called once per frame
+
+
 	private List<bit> rawBits2Bits (List<RawBit> rbs)//also add part # ?
 	{
 		List<bit> newBits = new List<bit>();
 
 		foreach (RawBit rb in rbs)
 		{
-			newBits.Add(new bit(rb));
+			newBits.Add(new bit(rb));//.point.x, rb.point.y, rb.point.z, rb.type, rb.value
 		}
 		return newBits;
 	}

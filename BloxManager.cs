@@ -18,6 +18,11 @@ public class BloxManager : MonoBehaviour
 	public GameObject HighlightCamera;
 	[Range(0, 50)]
 	public float Transparency;
+	// Use this for initialization
+	void Start ()
+	{
+
+	}
 
 	// Update is called once per frame
 	void Update ()
@@ -26,7 +31,9 @@ public class BloxManager : MonoBehaviour
 		CheckBoundaries();
 		CheckRebuild();
 		SetTransparency();
+
 	}
+
 	 
 	private void CheckRebuild ()
 	{
@@ -44,6 +51,7 @@ public class BloxManager : MonoBehaviour
 		_bConstructor.currentGroup.SetMinMax();
 		_minBorder = _bConstructor.currentGroup.min;
 		_maxBorder = _bConstructor.currentGroup.max; 
+		
 		GM._backgroundController.m_Boundries_set.x = (int)(_maxBorder.x - _minBorder.x) + 10;
 		GM._backgroundController.m_Boundries_set.y = (int)(_maxBorder.y - _minBorder.y) + 10;
 		GM._backgroundController.m_Boundries_set.z = (int)(_maxBorder.z - _minBorder.z) + 10;
@@ -54,7 +62,6 @@ public class BloxManager : MonoBehaviour
 		GM._backgroundController.Center.y = (int)((_maxBorder.y + _minBorder.y) / 2);
 		GM._backgroundController.Center.z = (int)((_maxBorder.z + _minBorder.z) / 2);
 	}
-
 	public void SetTransparency ()
 	{
 		GM.BloxMatTransparent.SetColor("_Color", new Color(1, 1, 1, Transparency / 100));

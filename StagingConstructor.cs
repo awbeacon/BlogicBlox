@@ -6,7 +6,7 @@ public class StagingConstructor : MonoBehaviour
 {
 	public Material mat;
 	public List<BlockSectionScript> BlockSections = new List<BlockSectionScript>();
-	public List<bit> DisplayBits = new List<bit>();
+	public List<bit> DisplayBits = new List<bit>();//ARRAY BROKEN DOWN BY SECTION CAN BE SUBDIVIDED
 	public int CurrentBlockSections = 0;
 	public bool _Rebuild;
 	public Group currentGroup;
